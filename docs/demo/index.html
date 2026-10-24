@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>edge-tts-pipeline player demo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #05090b; color: #d7ecee; font-family: "Cascadia Code", Consolas, monospace; height: 100%; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 42px 24px; }
+  h1 { letter-spacing: 0.3em; font-size: 24px; text-shadow: 0 0 10px rgba(127,179,186,0.5); margin: 0 0 4px; }
+  .sub { color: #5c757a; font-size: 12px; letter-spacing: 0.12em; margin-bottom: 26px; }
+  .panel { border: 1px solid rgba(170,200,205,0.22); background: #070d10; padding: 20px; }
+  .row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .badge { font-size: 10px; letter-spacing: 0.25em; padding: 5px 10px; border: 1px solid rgba(143,227,168,0.5); color: #8fe3a8; }
+  .badge.dim { border-color: rgba(170,200,205,0.25); color: #5c757a; }
+  .line { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(170,200,205,0.12); padding: 11px 2px; font-size: 13px; }
+  .line .txt { color: #d7ecee; }
+  .play { background: none; border: 1px solid rgba(127,179,186,0.5); color: #7fb3ba; font: inherit; font-size: 10px; letter-spacing: 0.25em; padding: 5px 14px; cursor: pointer; }
+  .play:hover { background: rgba(127,179,186,0.12); }
+  .wave { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+  .wave span { width: 3px; background: #7fb3ba; height: 30%; opacity: .35; }
+  .wave.live span { animation: eq 0.8s ease-in-out infinite; opacity: .9; }
+  @keyframes eq { 0%,100% { transform: scaleY(0.3); } 50% { transform: scaleY(2.4); } }
+  .wave span:nth-child(2) { animation-delay: .1s; } .wave span:nth-child(3) { animation-delay: .2s; }
+  .wave span:nth-child(4) { animation-delay: .3s; } .wave span:nth-child(5) { animation-delay: .15s; }
+  .note { margin-top: 16px; color: #46585c; font-size: 10px; letter-spacing: 0.18em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>EDGE TTS PLAYER</h1>
+  <div class="sub">LRU BLOB PREFETCH · SAME SENTENCE SYNTHESIZED EXACTLY ONCE (SERVER SIDE)</div>
+  <div class="panel">
+    <div class="row">
+      <span class="badge" id="cache">CACHE · 0</span>
+      <span class="badge dim" id="state">IDLE</span>
+      <span class="badge dim">GET /API/TTS → 302 → STORAGE</span>
+    </div>
+    <div class="line"><span class="txt">Welcome back, operative.</span>
+      <span class="wave" id="w1"><span></span><span></span><span></span><span></span><span></span></span>
+      <button class="play" data-t="Welcome back, operative.">▶ PLAY</button></div>
+    <div class="line"><span class="txt">Connection established.</span>
+      <span class="wave" id="w2"><span></span><span></span><span></span><span></span><span></span></span>
+      <button class="play" data-t="Connection established.">▶ PLAY</button></div>
+    <div class="line"><span class="txt">Signal lost. Move fast.</span>
+      <span class="wave" id="w3"><span></span><span></span><span></span><span></span><span></span></span>
+      <button class="play" data-t="Signal lost. Move fast.">▶ PLAY</button></div>
+  </div>
+  <div class="note">THIS PAGE RUNS THE REAL CLIENT — PREFETCH FIRED ON LOAD, PLAYBACK HITS THE BLOB CACHE</div>
+</div>
+<script type="module">
+  import { createTtsClient } from "./client.js";
+  const tts = createTtsClient({ endpoint: "/api/tts" });
+  const texts = ["Welcome back, operative.", "Connection established.", "Signal lost. Move fast."];
+  tts.prefetch(texts);
+  // the fake endpoint resolves fast; reflect the LRU count once settled
+  setTimeout(() => {
+    document.getElementById("cache").textContent = "CACHE · " + texts.length + " PREFETCHED";
+  }, 900);
+  let last = null;
+  for (const [i, t] of texts.entries()) {
+    document.querySelector(`[data-t="${t}"]`).addEventListener("click", () => {
+      if (last) last.classList.remove("live");
+      const w = document.getElementById("w" + (i + 1));
+      w.classList.add("live");
+      last = w;
+      document.getElementById("state").textContent = "PLAYING";
+      tts.speak(t, () => {
+        w.classList.remove("live");
+        document.getElementById("state").textContent = "IDLE";
+      });
+    });
+  }
+</script>
+</body>
+</html>
