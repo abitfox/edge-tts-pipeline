@@ -127,6 +127,8 @@ for (const text of texts) {
 Extracted from the HackerEnglish project, where it voices the entire learning
 corpus on a zero TTS budget. See [`docs/PORTING.md`](./docs/PORTING.md).
 
+It powers the audio of [www.hackerenglish.com](https://www.hackerenglish.com) — every sentence on the live site plays through this pipeline.
+
 ## License
 
 [MIT](./LICENSE).

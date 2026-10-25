@@ -116,6 +116,8 @@ for (const text of loadCorpus()) {
 
 抽取自 HackerEnglish 项目——全部学习语料的语音都在零 TTS 预算下由它驱动。见 [`docs/PORTING.md`](./docs/PORTING.md)。
 
+[www.hackerenglish.com](https://www.hackerenglish.com) 的全部站点音频都由本管线播放。
+
 ## 许可
 
 [MIT](./LICENSE)。
